@@ -5,12 +5,14 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
 	zsw "github.com/zhongshuwen/zswchain-go"
 	"github.com/zhongshuwen/zswchain-go/ecc"
 	"github.com/zhongshuwen/zswchain-go/zswitems"
+	"github.com/zhongshuwen/zswchain-tencent-kms-go/kmswallet"
 )
 
 func RunDebugScenarioA(ctx context.Context, api *zsw.API, creator zsw.AccountName, newKexinJiedian zsw.AccountName, newKexinJiedianPublicKey string, newKexinJiedianZswId string) (error, string) {
@@ -72,14 +74,21 @@ func getRandUUID() string {
 func RunDebugScenarioC(ctx context.Context, authorizer zsw.AccountName, newKexinJiedian zsw.AccountName) (error, string) {
 
 	api := zsw.New("https://node3.tn1.chao7.cn")
-	api.Debug = true
+	//api.Debug = true
+	keyBag := kmswallet.NewTencentKMSKeyBag(kmswallet.GetKMSClient(
+		os.Getenv("TENCENT_KMS_AK_ID"),
+		os.Getenv("TENCENT_KMS_AK_SECRET"),
+		"ap-shanghai",
+		"kms.tencentcloudapi.com",
+	))
+	keyBag.AddKMSKeyById(os.Getenv("TENCENT_KMS_KEY_ID"))
 
-	keyBag := &zsw.KeyBag{}
-
-	NoError(
-		keyBag.ImportPrivateKeyFromEnv(context.Background(), "ZSW_CONTENT_REVIEW_PRIVATE_KEY"),
-		"missing ZSW_CONTENT_REVIEW_PRIVATE_KEY",
-	)
+	/*
+		NoError(
+			keyBag.ImportPrivateKeyFromEnv(context.Background(), "ZSW_CONTENT_REVIEW_PRIVATE_KEY"),
+			"missing ZSW_CONTENT_REVIEW_PRIVATE_KEY",
+		)
+	*/
 	kexinJiedianZswId := uuid.New().String()
 	collectionZswId := uuid.New().String()
 	itemTemplateZswId := uuid.New().String()

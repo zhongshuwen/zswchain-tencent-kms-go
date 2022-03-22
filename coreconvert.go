@@ -11,19 +11,17 @@ import (
 type SimpleConverter func(inputData []byte, fromFormat string, toFormat string) ([]byte, int, error)
 
 var SIMPLE_CONVERT_FILE_REGISTRY map[string]map[string]SimpleConverter = map[string]map[string]SimpleConverter{
-	"pempub": {
-		"zswkey": func(inputData []byte, fromFormat string, toFormat string) ([]byte, int, error) {
+	"pubpem": {
+		"pubzswkey": func(inputData []byte, fromFormat string, toFormat string) ([]byte, int, error) {
 			data, err := ecc.SM2PemToZSWPublicKeyString(inputData)
+
 			return []byte(data), 1, err
 		},
 	},
 }
 
 func ConvertFile(inputData []byte, fromFormat string, toFormat string, inputFilePath string, outputFilePath string) ([]byte, error) {
-
 	if fromMap, ok := SIMPLE_CONVERT_FILE_REGISTRY[fromFormat]; ok {
-		//do something here
-
 		if convertor, nxt := fromMap[toFormat]; nxt {
 			if inputFilePath != "" {
 				inputFileData, err := os.ReadFile(inputFilePath)
@@ -32,28 +30,23 @@ func ConvertFile(inputData []byte, fromFormat string, toFormat string, inputFile
 				}
 				inputData = inputFileData
 			}
-			outputData, displayType, err := convertor(inputData, fromFormat, toFormat)
+			outputData, _, err := convertor(inputData, fromFormat, toFormat)
 			if err != nil {
 				return nil, err
 			}
 			if outputFilePath != "" {
 				f, err := os.Create(outputFilePath)
-
 				if err != nil {
 					log.Fatal(err)
 				}
-
 				defer f.Close()
-
 				_, err2 := f.Write(outputData)
 				if err2 != nil {
 					return nil, err2
 				}
-
 			} else {
-				if displayType == 1 {
-					fmt.Print(outputData)
-				}
+				fmt.Print(string(outputData))
+				return outputData, nil
 			}
 
 		}

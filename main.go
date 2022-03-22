@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
 	"log"
 	"math/rand"
@@ -54,43 +53,12 @@ func main() {
 	app.EnableBashCompletion = true
 	app.Commands = []*cli.Command{
 		{
-			Name:    "add",
-			Aliases: []string{"a"},
-			Usage:   "add a task to the list",
+			Name:    "allkms",
+			Aliases: []string{},
+			Usage:   "run kms tests on user",
 			Action: func(c *cli.Context) error {
-				err, _ := RunDebugScenarioC(c.Context, "zsw.admin", zsw.AccountName(RandomLowercaseStringAZ(12)))
+				err, _ := RunDebugScenarioC(c.Context, "kmskmstest11", zsw.AccountName(RandomLowercaseStringAZ(12)))
 				return err
-			},
-		},
-		{
-			Name:    "complete",
-			Aliases: []string{"c"},
-			Usage:   "complete a task on the list",
-			Action: func(c *cli.Context) error {
-				//				err, _ := RunDebugScenarioK(c.Context, "zsw.admin")
-				return nil // err
-			},
-		},
-		{
-			Name:    "sigtest",
-			Aliases: []string{"s"},
-			Usage:   "sig test",
-			Action: func(c *cli.Context) error {
-				sigString := "SIG_GM_MmUtHMCAnbjrYMud8CfigYVTWBXZyw6fwbjRUhtHxFPTHP43i31gLXJP14X6kLDNGh7ohz1TiFbCPpg6xN4cWL3DfeUcimUBD3b6LWWbFKexuaYNu2frn1rNv4Ds5GpGuwjRsjSXHEFy42x6L3v2"
-				digestString := "5382751f3525b0bac6cbd254e6076ccdc23f53b99e5eb6fd5a0ba3ba15dd92c8"
-				digestBytes, err := hex.DecodeString(digestString)
-				if err != nil {
-					return fmt.Errorf("decoding hex digest failed: %w", err)
-				}
-				err = checkSigCore2(sigString, digestBytes)
-				if err != nil {
-
-					fmt.Printf("test failed\n")
-					return err
-				} else {
-					fmt.Println("test passed")
-					return nil
-				}
 			},
 		},
 		{
@@ -141,29 +109,11 @@ func main() {
 				Usage:       "convert key format x to key format y",
 				UsageText:   "zswkmsdemo keys convert",
 				Description: "",
-				ArgsUsage:   "<n = 1>",
 				Category:    "",
 				Action: func(c *cli.Context) error {
-					countStr := c.Args().First()
-					generateCount := 1
-					if len(countStr) != 0 {
-						candidateCount, err := strconv.Atoi(c.Args().First())
-						if err != nil {
-							return fmt.Errorf("invalid setting for n %w", err)
-						} else if candidateCount <= 0 {
-							return fmt.Errorf("invalid setting for n, must be larger than 0")
-						} else {
-							generateCount = candidateCount
-						}
-					}
-					for i := 0; i < generateCount; i++ {
-						privateKey, err := ecc.NewRandomPrivateKey()
-						if err != nil {
-							return fmt.Errorf("error generating private key %w", err)
-						}
-						fmt.Printf("================================================================\n密钥: %s\n公钥: %s\n", privateKey.String(), privateKey.PublicKey().String())
-					}
-					return nil
+					_, err := ConvertFile([]byte{}, c.String("from"), c.String("to"), c.String("i"), c.String("o"))
+
+					return err
 				},
 				Subcommands: []*cli.Command{},
 				Flags: []cli.Flag{
@@ -198,10 +148,7 @@ func main() {
 				UseShortOptionHandling: false,
 				HelpName:               "",
 				CustomHelpTemplate:     "",
-			}, {Name: "remove", Usage: "remove an existing template", Action: func(c *cli.Context) error {
-				fmt.Println("removed task template: ", c.Args().First())
-				return nil
-			}}},
+			}},
 			Flags:                  []cli.Flag{},
 			SkipFlagParsing:        false,
 			HideHelp:               false,

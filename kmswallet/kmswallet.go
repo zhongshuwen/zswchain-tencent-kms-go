@@ -12,7 +12,7 @@ import (
 	zsw "github.com/zhongshuwen/zswchain-go"
 	ecc "github.com/zhongshuwen/zswchain-go/ecc"
 
-	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	common "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	kms "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/kms/v20190118"
 )
@@ -25,13 +25,21 @@ type TencentKMSKeyBag struct {
 
 func GetKMSClient(secretId string, secretKey string, region string, endpoint string) *kms.Client {
 
-	credential := common.NewCredential(
-		"SecretId",
-		"SecretKey",
-	)
 	cpf := profile.NewClientProfile()
 	cpf.HttpProfile.Endpoint = "kms.tencentcloudapi.com"
-	client, _ := kms.NewClient(credential, "", cpf)
+	client, _ := kms.NewClient(common.NewCredential(
+		secretId,
+		secretKey,
+	), "ap-shanghai", cpf)
+	/*
+
+		credential := common.NewCredential(
+			"SecretId",
+			"SecretKey",
+		)
+		cpf := profile.NewClientProfile()
+		cpf.HttpProfile.Endpoint = "kms.tencentcloudapi.com"
+		client, _ := kms.NewClient(credential, "", cpf)*/
 	return client
 }
 func NewTencentKMSKeyBag(client *kms.Client) *TencentKMSKeyBag {
@@ -42,13 +50,21 @@ func NewTencentKMSKeyBag(client *kms.Client) *TencentKMSKeyBag {
 	}
 }
 func (b *TencentKMSKeyBag) AddKMSKeyById(kmsId string) (string, error) {
-	result, err := b.KMSClient.GetPublicKey(&kms.GetPublicKeyRequest{
-		KeyId: &kmsId,
-	})
+
+	request := kms.NewGetPublicKeyRequest()
+
+	request.KeyId = common.StringPtr(kmsId)
+
+	response, err := b.KMSClient.GetPublicKey(request)
+	if err != nil {
+		return "", err
+	}
+
 	if err != nil {
 		return "", fmt.Errorf("Error adding KMS Key %w", err)
 	}
-	zswKey, err := ecc.SM2PemToZSWPublicKeyString([]byte(*result.Response.PublicKeyPem))
+	fmt.Printf("%+v\n", response)
+	zswKey, err := ecc.SM2PemToZSWPublicKeyString([]byte(*response.Response.PublicKeyPem))
 	if err != nil {
 		return "", fmt.Errorf("Error adding KMS Key %w", err)
 	}
@@ -101,6 +117,10 @@ func (b *TencentKMSKeyBag) AvailableKeys(ctx context.Context) (out []ecc.PublicK
 	for _, k := range b.Keys {
 		out = append(out, k.PublicKey())
 	}
+	for k := range b.PublicKeyToKMSIdMap {
+		out = append(out, ecc.MustNewPublicKey(k))
+	}
+
 	return
 }
 
@@ -152,21 +172,29 @@ func (b *TencentKMSKeyBag) Sign(ctx context.Context, tx *zsw.SignedTransaction, 
 			tx.Signatures = append(tx.Signatures, sig)
 		} else if privKey == nil {
 			kmsId := b.PublicKeyToKMSIdMap[key.String()]
-			digest1 := base64.StdEncoding.EncodeToString(sigDigest)
-			if kmsId != "" {
-				digestText := "DIGEST"
-				algoText := ("SM2DSA")
-				resp, err := b.KMSClient.SignByAsymmetricKeyWithContext(ctx, &kms.SignByAsymmetricKeyRequest{
 
-					Algorithm:   &algoText,
-					KeyId:       &kmsId,
-					Message:     &digest1,
-					MessageType: &digestText,
-				})
+			if kmsId != "" {
+				fmt.Printf("hang: %s\n", kmsId)
+				digest1 := base64.StdEncoding.EncodeToString(sigDigest)
+
+				request := kms.NewSignByAsymmetricKeyRequest()
+
+				request.Algorithm = common.StringPtr("SM2DSA")
+				request.Message = common.StringPtr(digest1)
+				request.KeyId = common.StringPtr(kmsId)
+				request.MessageType = common.StringPtr("DIGEST")
+
+				response, err := b.KMSClient.SignByAsymmetricKey(request)
+
+				if err != nil {
+					return nil, err
+				}
+				fmt.Printf("%s\n", response.ToJsonString())
+
 				if err != nil {
 					return nil, fmt.Errorf("Signing request to kms failed %w", err)
 				}
-				decodedSig1, err := base64.StdEncoding.DecodeString(*resp.Response.Signature)
+				decodedSig1, err := base64.StdEncoding.DecodeString(*response.Response.Signature)
 
 				if err != nil {
 					return nil, fmt.Errorf("error decoding base64 signature from kms! %w", err)

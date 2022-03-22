@@ -45,19 +45,20 @@ func GetCreateExampleCollection(authorizer zsw.AccountName, kexinJiedian zsw.Acc
 		zsw.ITEM_CONFIG_TRANSFERABLE
 
 	return []*zsw.Action{
-		zswitems.NewMakeSchema(
-			authorizer,
-			kexinJiedian,
-			collectionSchemaName,
-			[]zsw.FieldDef{
-				{Name: "name", Type: "string"},
-				{Name: "description", Type: "string"},
-				{Name: "logo_url", Type: "string"},
-				{Name: "website", Type: "string"},
-				{Name: "banner_url", Type: "string"},
-				{Name: "icon_url", Type: "string"},
-			},
-		),
+		/*
+			zswitems.NewMakeSchema(
+				authorizer,
+				kexinJiedian,
+				collectionSchemaName,
+				[]zsw.FieldDef{
+					{Name: "name", Type: "string"},
+					{Name: "description", Type: "string"},
+					{Name: "logo_url", Type: "string"},
+					{Name: "website", Type: "string"},
+					{Name: "banner_url", Type: "string"},
+					{Name: "icon_url", Type: "string"},
+				},
+			),*/
 		zswitems.NewMakeCollection(
 			authorizer,
 			UuidToUint128OrQuit(collectionZswId),
@@ -80,7 +81,6 @@ func GetCreateExampleCollection(authorizer zsw.AccountName, kexinJiedian zsw.Acc
 				"name":       zswattr.ToZSWAttribute("My Collection"),
 				"logo_url":   zswattr.ToZSWAttribute("https://zhongshuwen.com/wp-content/uploads/2021/08/zswlogo@4x.png"),
 				"website":    zswattr.ToZSWAttribute("https://zhongshuwen.com"),
-				"owner":      zswattr.ToZSWAttribute("zsw.admin"),
 				"banner_url": zswattr.ToZSWAttribute("https://zhongshuwen.com/wp-content/uploads/2021/08/zswlogo@4x.png"),
 			},
 			fmt.Sprintf("https://dummydata.testnet.chao7.cn/dd/collections/%d.json", UuidToUint128OrQuit(collectionZswId).Get40BitId()),
@@ -153,7 +153,6 @@ func GetActionsCreateExampleCollectionItemFlow721(authorizer zsw.AccountName, ke
 				{Name: "name", Type: "string"},
 				{Name: "logo_url", Type: "string"},
 				{Name: "website", Type: "string"},
-				{Name: "owner", Type: "string"},
 				{Name: "banner_url", Type: "string"},
 			},
 		),
@@ -179,7 +178,6 @@ func GetActionsCreateExampleCollectionItemFlow721(authorizer zsw.AccountName, ke
 				"name":       zswattr.ToZSWAttribute("My Collection"),
 				"logo_url":   zswattr.ToZSWAttribute("https://zhongshuwen.com/wp-content/uploads/2021/08/zswlogo@4x.png"),
 				"website":    zswattr.ToZSWAttribute("https://zhongshuwen.com"),
-				"owner":      zswattr.ToZSWAttribute("zsw.admin"),
 				"banner_url": zswattr.ToZSWAttribute("https://zhongshuwen.com/wp-content/uploads/2021/08/zswlogo@4x.png"),
 			},
 			fmt.Sprintf("https://dummydata.testnet.chao7.cn/dd/collections/%d.json", UuidToUint128OrQuit(collectionZswId).Get40BitId()),
