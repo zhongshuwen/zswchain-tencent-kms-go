@@ -79,7 +79,6 @@ func RunDebugScenarioC(ctx context.Context, authorizer zsw.AccountName, newKexin
 		os.Getenv("TENCENT_KMS_AK_ID"),
 		os.Getenv("TENCENT_KMS_AK_SECRET"),
 		"ap-shanghai",
-		"kms.tencentcloudapi.com",
 	))
 	keyBag.AddKMSKeyById(os.Getenv("TENCENT_KMS_KEY_ID"))
 
