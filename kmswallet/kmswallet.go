@@ -23,23 +23,14 @@ type TencentKMSKeyBag struct {
 	KMSClient           *kms.Client
 }
 
-func GetKMSClient(secretId string, secretKey string, region string, endpoint string) *kms.Client {
+func GetKMSClient(secretId string, secretKey string, region string) *kms.Client {
 
 	cpf := profile.NewClientProfile()
 	cpf.HttpProfile.Endpoint = "kms.tencentcloudapi.com"
 	client, _ := kms.NewClient(common.NewCredential(
 		secretId,
 		secretKey,
-	), "ap-shanghai", cpf)
-	/*
-
-		credential := common.NewCredential(
-			"SecretId",
-			"SecretKey",
-		)
-		cpf := profile.NewClientProfile()
-		cpf.HttpProfile.Endpoint = "kms.tencentcloudapi.com"
-		client, _ := kms.NewClient(credential, "", cpf)*/
+	), region, cpf)
 	return client
 }
 func NewTencentKMSKeyBag(client *kms.Client) *TencentKMSKeyBag {
